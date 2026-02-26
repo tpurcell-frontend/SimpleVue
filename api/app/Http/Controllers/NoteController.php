@@ -32,6 +32,21 @@ class NoteController extends Controller
     }
 
     /**
+     * Update a note.
+     */
+    public function update(Request $request, Note $note): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string'],
+        ]);
+
+        $note->update($validated);
+
+        return response()->json($note);
+    }
+
+    /**
      * Delete a note.
      */
     public function destroy(Note $note): JsonResponse

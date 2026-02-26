@@ -10,6 +10,9 @@
   const notes = ref<Note[]>([])
   const title = ref('')
   const body = ref('')
+  const editingId = ref<number | null>(null)
+  const editTitle = ref('')
+  const editBody = ref('')
 
   const fetchNotes = async () => {
     const res = await fetch('/api/notes')
@@ -27,6 +30,29 @@
     body.value = ''
     await fetchNotes();
   }
+
+  const startEditing = (note: Note) => {
+    editingId.value = note.id
+    editTitle.value = note.title 
+    editBody.value = note.body
+  }
+
+  const cancelEditing = () => {
+    editTitle.value = ''
+    editBody.value = ''
+    editingId.value = null
+  }
+
+  const saveNote = async (note: Note) => {
+    await fetch(`api/notes/${note.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: editTitle.value, body: editBody.value })
+    })
+    editingId.value = null
+    await fetchNotes();
+  }
+
 
   const deleteNote = async(id: number) => {
     await fetch(`api/notes/${id}`, { method: 'DELETE' })
@@ -71,16 +97,55 @@
         :key="note.id"
         class="bg-white rounded-lg shadow p-6"
       >
-        <div class="flex justify-between items-start">
-          <h3 class="font-semibold text-lg">{{ note.title }}</h3>
+        <!-- Editing state -->
+        <div v-if="editingId === note.id">
+          <input
+            v-model="editTitle"
+            type="text"
+            placeholder="Title"
+            class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <textarea
+              v-model="editBody"
+              placeholder="Write your note..."
+              rows="4"
+              class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+          </textarea>
           <button
-            @click="deleteNote(note.id)"
+              @click="cancelEditing()"
+              class="text-blue-400 hover:text-blue-600 text-sm"
+            >
+            Cancel
+          </button>
+          <button
+            @click="saveNote(note)"
             class="text-red-400 hover:text-red-600 text-sm ml-4"
           >
-            Delete
+            Save
           </button>
         </div>
-        <p class="text-gray-600 mt-2">{{ note.body }}</p>
+        <!-- Viewing state -->
+        <div v-else>
+          <div class="flex flex-wrap justify-between items-start">
+            <h3 class="font-semibold text-lg">{{ note.title }}</h3>
+            <div>
+              <button
+                  @click="startEditing(note)"
+                  class="text-blue-400 hover:text-blue-600 text-sm"
+                >
+                Edit
+              </button>
+              <button
+                @click="deleteNote(note.id)"
+                class="text-red-400 hover:text-red-600 text-sm ml-4"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+          <p class="text-gray-600 mt-2">{{ note.body }}</p>
+        </div>
       </div>
     </div>
   </div>
