@@ -39,3 +39,11 @@ npm run dev
 ```
 
 Visit `http://localhost:5173`
+
+## Features
+
+- Create notes with a title and body
+- Edit notes inline
+- Delete notes
+- Character limits (50 for title, 500 for body) with live counts and validation
+- Add Note and Save buttons disabled until input is valid

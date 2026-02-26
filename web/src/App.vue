@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, computed } from 'vue'
 
   interface Note {
     id: number
@@ -14,14 +14,40 @@
   const editTitle = ref('')
   const editBody = ref('')
 
+  // Limits
+  const TITLE_LIMIT = 50
+  const BODY_LIMIT = 500
+
+  // Character counts
+  const titleCount = computed(() => title.value.length)
+  const bodyCount = computed(() => body.value.length)
+  const editTitleCount = computed(() => editTitle.value.length)
+  const editBodyCount = computed(() => editBody.value.length)
+
+  // Validation
+  const canCreate = computed(() => 
+    title.value.trim().length > 0 &&
+    body.value.trim().length > 0 &&    
+    titleCount.value <= TITLE_LIMIT &&
+    bodyCount.value <= BODY_LIMIT
+  )
+
+  const canSave = computed(() => 
+    editTitle.value.trim().length > 0 &&
+    editBody.value.trim().length > 0 &&    
+    editTitleCount.value <= TITLE_LIMIT &&
+    editBodyCount.value <= BODY_LIMIT
+  )
+
+  // Note functions
   const fetchNotes = async () => {
     const res = await fetch('/api/notes')
     notes.value = await res.json()
   }
 
   const createNote = async () => {
-    if(!title.value.trim() || !body.value.trim()) return
-    await fetch('api/notes', {
+    if(!canCreate.value) return;
+    await fetch('/api/notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: title.value, body: body.value })
@@ -44,7 +70,8 @@
   }
 
   const saveNote = async (note: Note) => {
-    await fetch(`api/notes/${note.id}`, {
+    if(!canSave.value) return;
+    await fetch(`/api/notes/${note.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: editTitle.value, body: editBody.value })
@@ -53,9 +80,8 @@
     await fetchNotes();
   }
 
-
   const deleteNote = async(id: number) => {
-    await fetch(`api/notes/${id}`, { method: 'DELETE' })
+    await fetch(`/api/notes/${id}`, { method: 'DELETE' })
     await fetchNotes();
   }
 
@@ -74,15 +100,19 @@
         placeholder="Title"
         class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
+      <p class="text-right mb-3" :class="titleCount > TITLE_LIMIT ? 'text-red-500' : 'text-gray-500'">{{titleCount}}/50</p>
       <textarea
         v-model="body"
         placeholder="Write your note..."
         rows="4"
         class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
       ></textarea>
+      <p class="text-right mb-3" :class="bodyCount > BODY_LIMIT ? 'text-red-500' : 'text-gray-500'">{{bodyCount}}/500</p>
       <button
         @click="createNote"
         class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+        :class="!canCreate && 'bg-gray-500'"
+        :disabled="!canCreate"
       >
         Add Note
       </button>
@@ -105,6 +135,7 @@
             placeholder="Title"
             class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <p class="text-right mb-3" :class="editTitleCount > TITLE_LIMIT ? 'text-red-500' : 'text-gray-500'">{{editTitleCount}}/50</p>
           <textarea
               v-model="editBody"
               placeholder="Write your note..."
@@ -112,17 +143,20 @@
               class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
           </textarea>
+          <p class="text-right mb-3" :class="editBodyCount > BODY_LIMIT ? 'text-red-500' : 'text-gray-500'">{{editBodyCount}}/500</p>
+          <button
+            @click="saveNote(note)"
+            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+            :class="!canSave && 'bg-gray-500'"
+            :disabled="!canSave"
+          >
+            Save
+          </button>
           <button
               @click="cancelEditing()"
               class="text-blue-400 hover:text-blue-600 text-sm"
             >
             Cancel
-          </button>
-          <button
-            @click="saveNote(note)"
-            class="text-red-400 hover:text-red-600 text-sm ml-4"
-          >
-            Save
           </button>
         </div>
         <!-- Viewing state -->
@@ -152,30 +186,4 @@
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
 </style>
