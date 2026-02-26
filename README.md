@@ -1,4 +1,4 @@
-# Simplevue
+# Simplevue (v1.0)
 
 A simple note-taking app built with Laravel and Vue 3.
 
@@ -7,7 +7,7 @@ A simple note-taking app built with Laravel and Vue 3.
 | Layer | Technology |
 |---|---|
 | Backend | Laravel 11 |
-| Frontend | Vue 3 + Vite (coming soon) |
+| Frontend | Vue 3 + Vite |
 | Database | MySQL 8 |
 
 ## API Endpoints
