@@ -29,3 +29,12 @@ php artisan key:generate
 php artisan migrate
 php artisan serve
 ```
+
+### Frontend
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Visit `http://localhost:5173`
