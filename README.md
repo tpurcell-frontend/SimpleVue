@@ -16,6 +16,7 @@ A simple note-taking app built with Laravel and Vue 3.
 |---|---|---|
 | GET | /api/notes | Get all notes |
 | POST | /api/notes | Create a note |
+| POST | /api/notes/note.id | Update a note |
 | DELETE | /api/notes/{id} | Delete a note |
 
 ## Setup
