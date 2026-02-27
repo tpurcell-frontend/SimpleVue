@@ -48,3 +48,4 @@ Visit `http://localhost:5173`
 - Character limits (50 for title, 500 for body) with live counts and validation
 - Add Note and Save buttons disabled until input is valid
 - Live note search filter 
+- Note sorting by 'newest', 'oldest', 'A-Z', 'Z-A'

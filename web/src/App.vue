@@ -5,6 +5,7 @@
     id: number
     title: string
     body: string
+    created_at: Date
   }
 
   const notes = ref<Note[]>([])
@@ -14,6 +15,7 @@
   const editTitle = ref('')
   const editBody = ref('')
   const search = ref('')
+  const sortBy = ref('newest')
 
   // Limits
   const TITLE_LIMIT = 50
@@ -47,6 +49,30 @@
       note.body.toLowerCase().includes(search.value.toLowerCase())
     )
   )
+
+  // Sort
+  const sortedNotes = computed(() => {
+    const notes = [...filteredNotes.value];
+    
+    switch(sortBy.value) {
+      case 'oldest':
+        return notes.sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      case 'az':
+        return notes.sort(
+          (a, b) => a.title.localeCompare(b.title)
+        );
+      case 'za':
+        return notes.sort(
+          (a, b) => b.title.localeCompare(a.title)
+        );
+      default:
+        return notes.sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+    }
+  })
   
   // Note functions
   const fetchNotes = async () => {
@@ -130,6 +156,13 @@
       >
         Add Note
       </button>
+      <select 
+        v-model="sortBy">
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="az">AZ</option>
+        <option value="za">ZA</option>
+      </select>
       <p v-if="filteredNotes.length === 0 && notes.length > 0" class="text-red-500 text-left py-8">No notes match your search</p>
     </div>
 
@@ -139,7 +172,7 @@
 
     <div class="space-y-4">
       <div
-        v-for="note in filteredNotes"
+        v-for="note in sortedNotes"
         :key="note.id"
         class="bg-white rounded-lg shadow p-6"
       >
@@ -194,7 +227,8 @@
               </button>
             </div>
           </div>
-          <p class="text-gray-600 mt-2">{{ note.body }}</p>
+          <p class="text-black-600 mt-2">{{ note.body }}</p>
+          <p class="text-gray-600 mt-2">{{ new Date(note.created_at).toLocaleString('default', {month: 'long'}) }} {{ new Date(note.created_at).toLocaleString() }}</p>
         </div>
       </div>
     </div>
