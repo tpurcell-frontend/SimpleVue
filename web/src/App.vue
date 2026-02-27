@@ -13,6 +13,7 @@
   const editingId = ref<number | null>(null)
   const editTitle = ref('')
   const editBody = ref('')
+  const search = ref('')
 
   // Limits
   const TITLE_LIMIT = 50
@@ -39,6 +40,14 @@
     editBodyCount.value <= BODY_LIMIT
   )
 
+  // Search
+  const filteredNotes = computed(() => 
+    notes.value.filter(note =>
+      note.title.toLowerCase().includes(search.value.toLowerCase()) ||
+      note.body.toLowerCase().includes(search.value.toLowerCase())
+    )
+  )
+  
   // Note functions
   const fetchNotes = async () => {
     const res = await fetch('/api/notes')
@@ -91,7 +100,12 @@
 <template>
   <div class="max-w-2xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-8">My Notes</h1>
-
+    <input 
+      v-model="search"
+      type="search"
+      placeholder="Enter your search terms..."
+      class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
     <div class="bg-white rounded-lg shadow p-6 mb-8">
       <h2 class="text-lg font-semibold mb-4">New Note</h2>
       <input
@@ -116,14 +130,16 @@
       >
         Add Note
       </button>
+      <p v-if="filteredNotes.length === 0 && notes.length > 0" class="text-red-500 text-left py-8">No notes match your search</p>
     </div>
 
+    <p v-if="notes.length === 0" class="text-gray-400 text-center py-8">
+      No notes yet. Add one above.
+    </p>
+
     <div class="space-y-4">
-      <p v-if="notes.length === 0" class="text-gray-400 text-center py-8">
-        No notes yet. Add one above.
-      </p>
       <div
-        v-for="note in notes"
+        v-for="note in filteredNotes"
         :key="note.id"
         class="bg-white rounded-lg shadow p-6"
       >
