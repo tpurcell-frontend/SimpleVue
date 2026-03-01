@@ -49,3 +49,5 @@ Visit `http://localhost:5173`
 - Add Note and Save buttons disabled until input is valid
 - Live note search filter 
 - Note sorting by 'newest', 'oldest', 'A-Z', 'Z-A'
+- Tag notes with custom labels
+- Filter notes by tag

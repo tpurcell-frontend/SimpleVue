@@ -1,21 +1,37 @@
 <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
 
+  // Types
   interface Note {
     id: number
     title: string
     body: string
     created_at: Date
+    tags: Tag[]
   }
 
+  interface Tag {
+    id: number
+    name: string
+  }
+
+  // References
   const notes = ref<Note[]>([])
   const title = ref('')
   const body = ref('')
+
   const editingId = ref<number | null>(null)
   const editTitle = ref('')
   const editBody = ref('')
+
   const search = ref('')
   const sortBy = ref('newest')
+
+  const newTag = ref('')
+  const editTag = ref('')
+  const newTags = ref<string[]>([])
+  const editTags = ref<string[]>([])
+  const selectedTag = ref('')
 
   // Limits
   const TITLE_LIMIT = 50
@@ -44,10 +60,17 @@
 
   // Search
   const filteredNotes = computed(() => 
-    notes.value.filter(note =>
-      note.title.toLowerCase().includes(search.value.toLowerCase()) ||
-      note.body.toLowerCase().includes(search.value.toLowerCase())
-    )
+    notes.value.filter(note => {
+      const matchesSearch =
+        note.title.toLowerCase().includes(search.value.toLowerCase()) ||
+        note.body.toLowerCase().includes(search.value.toLowerCase())
+
+      const matchesTag = 
+        !selectedTag.value || 
+        note.tags.some(t => t.name === selectedTag.value)
+
+      return matchesSearch && matchesTag
+    })
   )
 
   // Sort
@@ -73,6 +96,34 @@
         )
     }
   })
+
+  // Tagging
+  const addNewTag = () => {
+    const tag = newTag.value.trim().toLowerCase()
+    if (!tag || newTags.value.includes(tag)) return
+    newTags.value.push(tag)
+    newTag.value = ''
+  }
+
+  const removeNewTag = (tag: string) => {
+    newTags.value = newTags.value.filter(t => t !== tag)
+  }
+
+  const addEditTag = () => {
+    const tag = editTag.value.trim().toLowerCase()
+    if (!tag || editTags.value.includes(tag)) return
+    editTags.value.push(tag)
+    editTag.value = ''
+  }
+
+  const removeEditTag = (tag: string) => {
+    editTags.value = editTags.value.filter(t => t !== tag)
+  }
+
+  const allTags = computed(() => {
+    const tags = notes.value.flatMap(note => note.tags)
+    return [...new Map(tags.map(t => [t.id, t])).values()]
+  })
   
   // Note functions
   const fetchNotes = async () => {
@@ -85,10 +136,11 @@
     await fetch('/api/notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: title.value, body: body.value })
+      body: JSON.stringify({ title: title.value, body: body.value, tags: newTags.value })
     })
     title.value = ''
     body.value = ''
+    newTags.value = []
     await fetchNotes();
   }
 
@@ -96,11 +148,13 @@
     editingId.value = note.id
     editTitle.value = note.title 
     editBody.value = note.body
+    editTags.value = note.tags.map(t => t.name)
   }
 
   const cancelEditing = () => {
     editTitle.value = ''
     editBody.value = ''
+    editTags.value = []
     editingId.value = null
   }
 
@@ -109,9 +163,10 @@
     await fetch(`/api/notes/${note.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: editTitle.value, body: editBody.value })
+      body: JSON.stringify({ title: editTitle.value, body: editBody.value, tags: editTags.value })
     })
     editingId.value = null
+    editTags.value = []
     await fetchNotes();
   }
 
@@ -126,12 +181,6 @@
 <template>
   <div class="max-w-2xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-8">My Notes</h1>
-    <input 
-      v-model="search"
-      type="search"
-      placeholder="Enter your search terms..."
-      class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
     <div class="bg-white rounded-lg shadow p-6 mb-8">
       <h2 class="text-lg font-semibold mb-4">New Note</h2>
       <input
@@ -148,21 +197,81 @@
         class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
       ></textarea>
       <p class="text-right mb-3" :class="bodyCount > BODY_LIMIT ? 'text-red-500' : 'text-gray-500'">{{bodyCount}}/500</p>
-      <button
-        @click="createNote"
-        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-        :class="!canCreate && 'bg-gray-500'"
-        :disabled="!canCreate"
-      >
-        Add Note
-      </button>
+      <!-- Search -->
+      <input 
+        v-model="search"
+        type="search"
+        placeholder="Enter your search terms..."
+        class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <!-- Tag input for new note -->
+      <div class="mb-3">
+        <div class="flex gap-2 mb-2">
+          <input
+            v-model="newTag"
+            type="text"
+            placeholder="Add a tag..."
+            @keyup.enter="addNewTag"
+            class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            @click="addNewTag"
+            type="button"
+            class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition-colors"
+          >
+            Add Tag
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <span
+            v-for="tag in newTags"
+            :key="tag"
+            class="bg-blue-100 text-blue-700 text-sm px-2 py-1 rounded-full flex items-center gap-1"
+          >
+            {{ tag }}
+            <button @click="removeNewTag(tag)" class="hover:text-blue-900">&times;</button>
+          </span>
+        </div>
+      </div>
+      <!-- Add new note-->
+      <div>
+        <button
+          @click="createNote"
+          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          :class="!canCreate && 'bg-gray-500'"
+          :disabled="!canCreate"
+        >
+          Add Note
+        </button>
+      </div>
+      <!-- Sort -->
       <select 
-        v-model="sortBy">
+        v-model="sortBy"
+        class="mt-4"
+      >
         <option value="newest">Newest</option>
         <option value="oldest">Oldest</option>
         <option value="az">AZ</option>
         <option value="za">ZA</option>
       </select>
+      <div v-if="allTags.length > 0" class="flex flex-wrap gap-2 mb-4">
+        <button
+          @click="selectedTag = ''"
+          class="text-sm px-3 py-1 rounded-full transition-colors"
+          :class="selectedTag === '' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+        >
+          All
+        </button>
+        <button
+          v-for="tag in allTags"
+          :key="tag.id"
+          @click="selectedTag = tag.name"
+          class="text-sm px-3 py-1 rounded-full transition-colors"
+          :class="selectedTag === tag.name ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'"
+        >
+          {{ tag.name }}
+        </button>
+      </div>
       <p v-if="filteredNotes.length === 0 && notes.length > 0" class="text-red-500 text-left py-8">No notes match your search</p>
     </div>
 
@@ -193,6 +302,35 @@
             >
           </textarea>
           <p class="text-right mb-3" :class="editBodyCount > BODY_LIMIT ? 'text-red-500' : 'text-gray-500'">{{editBodyCount}}/500</p>
+          <!-- Tag input for edit -->
+          <div class="mb-3">
+            <div class="flex gap-2 mb-2">
+              <input
+                v-model="editTag"
+                type="text"
+                placeholder="Add a tag..."
+                @keyup.enter="addEditTag"
+                class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                @click="addEditTag"
+                type="button"
+                class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition-colors"
+              >
+                Add Tag
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="tag in editTags"
+                :key="tag"
+                class="bg-blue-100 text-blue-700 text-sm px-2 py-1 rounded-full flex items-center gap-1"
+              >
+                {{ tag }}
+                <button @click="removeEditTag(tag)" class="hover:text-blue-900">&times;</button>
+              </span>
+            </div>
+          </div>
           <button
             @click="saveNote(note)"
             class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
@@ -228,6 +366,15 @@
             </div>
           </div>
           <p class="text-black-600 mt-2">{{ note.body }}</p>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <span
+              v-for="tag in note.tags"
+              :key="tag.id"
+              class="bg-blue-100 text-blue-700 text-sm px-2 py-1 rounded-full"
+            >
+              {{ tag.name }}
+            </span>
+          </div>
           <p class="text-gray-600 mt-2">{{ new Date(note.created_at).toLocaleString('default', {month: 'long'}) }} {{ new Date(note.created_at).toLocaleString() }}</p>
         </div>
       </div>
