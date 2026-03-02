@@ -21,6 +21,8 @@
 <template>
   <div class="max-w-2xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-8">My Notes</h1>
+
+    <!-- New Note form -->
     <div class="bg-white rounded-lg shadow p-6 mb-8">
       <h2 class="text-lg font-semibold mb-4">New Note</h2>
       <input
@@ -37,13 +39,6 @@
         class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
       ></textarea>
       <p class="text-right mb-3" :class="bodyCount > BODY_LIMIT ? 'text-red-500' : 'text-gray-500'">{{bodyCount}}/500</p>
-      <!-- Search -->
-      <input 
-        v-model="search"
-        type="search"
-        placeholder="Enter your search terms..."
-        class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
       <!-- Tag input for new note -->
       <div class="mb-3">
         <div class="flex gap-2 mb-2">
@@ -73,28 +68,31 @@
           </span>
         </div>
       </div>
-      <!-- Add new note-->
-      <div>
-        <button
-          @click="createNote"
-          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-          :class="!canCreate && 'bg-gray-500'"
-          :disabled="!canCreate"
-        >
-          Add Note
-        </button>
-      </div>
-      <!-- Sort -->
-      <select 
-        v-model="sortBy"
-        class="mt-4"
+      <button
+        @click="createNote"
+        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+        :class="!canCreate && 'bg-gray-500'"
+        :disabled="!canCreate"
       >
+        Add Note
+      </button>
+    </div>
+
+    <!-- Search, sort and filter -->
+    <div class="mb-6 space-y-3">
+      <input 
+        v-model="search"
+        type="search"
+        placeholder="Enter your search terms..."
+        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <select v-model="sortBy">
         <option value="newest">Newest</option>
         <option value="oldest">Oldest</option>
         <option value="az">AZ</option>
         <option value="za">ZA</option>
       </select>
-      <div v-if="allTags.length > 0" class="flex flex-wrap gap-2 mb-4">
+      <div v-if="allTags.length > 0" class="flex flex-wrap gap-2">
         <button
           @click="selectedTag = ''"
           class="text-sm px-3 py-1 rounded-full transition-colors"
@@ -112,9 +110,12 @@
           {{ tag.name }}
         </button>
       </div>
-      <p v-if="filteredNotes.length === 0 && notes.length > 0" class="text-red-500 text-left py-8">No notes match your search</p>
+      <p v-if="filteredNotes.length === 0 && notes.length > 0" class="text-red-500">
+        No notes match your search
+      </p>
     </div>
 
+    <!-- Notes list -->
     <p v-if="notes.length === 0" class="text-gray-400 text-center py-8">
       No notes yet. Add one above.
     </p>
@@ -135,14 +136,12 @@
           />
           <p class="text-right mb-3" :class="editTitleCount > TITLE_LIMIT ? 'text-red-500' : 'text-gray-500'">{{editTitleCount}}/50</p>
           <textarea
-              v-model="editBody"
-              placeholder="Write your note..."
-              rows="4"
-              class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-          </textarea>
+            v-model="editBody"
+            placeholder="Write your note..."
+            rows="4"
+            class="w-full border rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          ></textarea>
           <p class="text-right mb-3" :class="editBodyCount > BODY_LIMIT ? 'text-red-500' : 'text-gray-500'">{{editBodyCount}}/500</p>
-          <!-- Tag input for edit -->
           <div class="mb-3">
             <div class="flex gap-2 mb-2">
               <input
@@ -180,9 +179,9 @@
             Save
           </button>
           <button
-              @click="cancelEditing()"
-              class="text-blue-400 hover:text-blue-600 text-sm"
-            >
+            @click="cancelEditing()"
+            class="text-blue-400 hover:text-blue-600 text-sm ml-2"
+          >
             Cancel
           </button>
         </div>
@@ -192,9 +191,9 @@
             <h3 class="font-semibold text-lg">{{ note.title }}</h3>
             <div>
               <button
-                  @click="startEditing(note)"
-                  class="text-blue-400 hover:text-blue-600 text-sm"
-                >
+                @click="startEditing(note)"
+                class="text-blue-400 hover:text-blue-600 text-sm"
+              >
                 Edit
               </button>
               <button
