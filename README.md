@@ -51,3 +51,50 @@ Visit `http://localhost:5173`
 - Note sorting by 'newest', 'oldest', 'A-Z', 'Z-A'
 - Tag notes with custom labels
 - Filter notes by tag
+
+## GraphQL
+
+This app also exposes a GraphQL API via Lighthouse.
+
+### Endpoint
+`POST /graphql`
+
+### Playground
+`GET /graphql-playground`
+
+### Queries
+- `notes` — get all notes with tags
+- `note(id: ID!)` — get a single note
+
+### Mutations
+- `createNote(title, body)` — create a note
+- `updateNote(id, title, body)` — update a note
+- `deleteNote(id)` — delete a note
+- `syncTags(note_id, tags)` — sync tags on a note
+
+### Example Usage
+
+Create a note:
+```graphql
+mutation {
+  createNote(title: "My note", body: "Note content") {
+    id
+    title
+    body
+  }
+}
+```
+
+Sync tags on a note:
+```graphql
+mutation {
+  syncTags(note_id: 1, tags: ["graphql", "lighthouse"]) {
+    id
+    title
+    tags {
+      id
+      name
+    }
+  }
+}
+```

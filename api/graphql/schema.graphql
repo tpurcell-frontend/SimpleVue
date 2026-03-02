@@ -1,0 +1,24 @@
+type Query {
+  notes: [Note!]! @all
+  note(id: ID! @eq): Note @find
+}
+
+type Mutation {
+  createNote(title: String!, body: String!): Note @create
+  updateNote(id: ID!, title: String!, body: String!): Note @update 
+  deleteNote(id: ID!): Note @delete
+  syncTags(note_id: ID!, tags: [String!]!): Note @field(resolver: "App\\GraphQL\\Mutations\\SyncTags")
+}
+
+type Note {
+  id: ID!
+  title: String!
+  body: String!
+  created_at: String!
+  tags: [Tag!]! @belongsToMany
+}
+
+type Tag {
+  id: ID!
+  name: String!
+}
