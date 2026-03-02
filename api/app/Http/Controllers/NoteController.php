@@ -61,9 +61,9 @@ class NoteController extends Controller
             'body' => $validated['body'],
         ]);
 
-        $tagIds = collect($validated['tags']->map(function ($name) {
+        $tagIds = collect($validated['tags'])->map(function ($name) {
             return Tag::firstOrCreate(['name' => strtolower(trim($name))])->id;
-        }));
+        });
         $note->tags()->sync($tagIds);
 
         return response()->json($note->load('tags'));
