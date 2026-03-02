@@ -12,6 +12,10 @@
   } = useNotes();
 
   onMounted(() => fetchNotes())
+  /** If this used Nuxt 
+   * data fetching - await useAsyncData('notes', fetchNotes)
+   * routing - move file to pages/notes.vue
+   * */ 
 </script>
 
 <template>
