@@ -8,7 +8,9 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/notes', [NoteController::class, 'index']);
-Route::post('/notes', [NoteController::class, 'store']);
-Route::put('/notes/{note}', [NoteController::class, 'update']);
-Route::delete('/notes/{note}', [NoteController::class, 'destroy']);
+// Route::get('/notes', [NoteController::class, 'index']);
+// Route::post('/notes', [NoteController::class, 'store']);
+// Route::put('/notes/{note}', [NoteController::class, 'update']);
+// Route::delete('/notes/{note}', [NoteController::class, 'destroy']);
+
+Route::apiResource('notes', NoteController::class);
