@@ -98,3 +98,20 @@ mutation {
   }
 }
 ```
+
+## Testing
+
+### Backend (PHPUnit)
+
+Run all tests:
+```bash
+cd api
+php artisan test
+```
+
+#### Test types
+- **Unit tests** — test individual model methods in isolation
+- **Feature tests** — test full HTTP request/response cycles (integration tests)
+
+#### Test database
+Tests use an in-memory SQLite database configured in `phpunit.xml`. The database is wiped clean between each test via `RefreshDatabase`.
