@@ -130,21 +130,50 @@ export const useNotes = () => {
 
     // Note functions
     const fetchNotes = async () => {
-        const res = await fetch('/api/notes')
-        notes.value = await res.json()
+        try {
+            const res = await fetch('/api/notes')
+            if(!res.ok) throw new Error(`HTTP error ${res.status}`)
+            notes.value = await res.json()
+        }
+        catch(error) {
+            console.error('Fetch failed', error);
+            throw error
+        }
+    }
+
+    async function handleFetch() {
+        try {
+            await fetchNotes()
+        } catch (error) {
+            alert('Failed to load notes')
+        }
     }
 
     const createNote = async () => {
         if(!canCreate.value) return;
-        await fetch('/api/notes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: title.value, body: body.value, tags: newTags.value })
-        })
-        title.value = ''
-        body.value = ''
-        newTags.value = []
-        await fetchNotes();
+        try {
+            await fetch('/api/notes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title.value, body: body.value, tags: newTags.value })
+            })
+            title.value = ''
+            body.value = ''
+            newTags.value = []
+            await fetchNotes();
+        }
+        catch(error) {
+            console.error('Create a note failed', error);
+            throw error
+        }
+    }
+
+    async function handleCreate() {
+        try {
+            await createNote()
+        } catch (error) {
+            alert('Failed to create note')
+        }
     }
 
     const startEditing = (note: Note) => {
@@ -163,19 +192,47 @@ export const useNotes = () => {
 
     const saveNote = async (note: Note) => {
         if(!canSave.value) return;
-        await fetch(`/api/notes/${note.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: editTitle.value, body: editBody.value, tags: editTags.value })
-        })
-        editingId.value = null
-        editTags.value = []
-        await fetchNotes();
+        try {
+            await fetch(`/api/notes/${note.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: editTitle.value, body: editBody.value, tags: editTags.value })
+            })
+            editingId.value = null
+            editTags.value = []
+            await fetchNotes();
+        }
+        catch(error) {
+            console.error('Save a note failed', error);
+            throw error
+        }
+    }
+
+    async function handleSave(note: Note) {
+        try {
+            await saveNote(note)
+        } catch (error) {
+            alert('Could not save note')
+        }
     }
 
     const deleteNote = async(id: number) => {
-        await fetch(`/api/notes/${id}`, { method: 'DELETE' })
-        await fetchNotes();
+        try {
+            await fetch(`/api/notes/${id}`, { method: 'DELETE' })
+            await fetchNotes();
+        }
+        catch(error) {
+            console.error('Delete a note failed', error);
+            throw error
+        }
+    }
+
+    async function handleDelete(id: number) {
+        try {
+            await deleteNote(id)
+        } catch (error) {
+            alert('Could not delete note')
+        }
     }
     
     return {
@@ -185,6 +242,7 @@ export const useNotes = () => {
         titleCount, bodyCount, editTitleCount, editBodyCount,
         canCreate, canSave, filteredNotes, sortedNotes, allTags,
         addNewTag, removeNewTag, addEditTag, removeEditTag,
-        fetchNotes, createNote, startEditing, cancelEditing, saveNote, deleteNote,
+        handleFetch, handleCreate, startEditing, cancelEditing, 
+        handleSave, handleDelete 
     }
 }

@@ -7,11 +7,10 @@
     TITLE_LIMIT, BODY_LIMIT,
     titleCount, bodyCount, editTitleCount, editBodyCount,
     canCreate, canSave, filteredNotes, sortedNotes, allTags,
-    addNewTag, removeNewTag, addEditTag, removeEditTag,
-    fetchNotes, createNote, startEditing, cancelEditing, saveNote, deleteNote, 
+    addNewTag, removeNewTag, addEditTag, removeEditTag, handleFetch, handleCreate, startEditing, cancelEditing, handleSave, handleDelete, 
   } = useNotes();
 
-  onMounted(() => fetchNotes())
+  onMounted(() => handleFetch())
   /** If this used Nuxt 
    * data fetching - await useAsyncData('notes', fetchNotes)
    * routing - move file to pages/notes.vue
@@ -69,7 +68,7 @@
         </div>
       </div>
       <button
-        @click="createNote"
+        @click="handleCreate"
         class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
         :class="!canCreate && 'bg-gray-500'"
         :disabled="!canCreate"
@@ -171,7 +170,7 @@
             </div>
           </div>
           <button
-            @click="saveNote(note)"
+            @click="handleSave(note)"
             class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
             :class="!canSave && 'bg-gray-500'"
             :disabled="!canSave"
@@ -197,7 +196,7 @@
                 Edit
               </button>
               <button
-                @click="deleteNote(note.id)"
+                @click="handleDelete(note.id)"
                 class="text-red-400 hover:text-red-600 text-sm ml-4"
               >
                 Delete
